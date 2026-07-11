@@ -316,6 +316,7 @@ rounds_since_todo = 0
 
 def agent_loop(messages: list):
     global rounds_since_todo
+    rounds_since_todo = 0  # 每轮新对话从0开始计数
     while True:
         # s05: nag reminder
         if rounds_since_todo >= 3 and messages:
