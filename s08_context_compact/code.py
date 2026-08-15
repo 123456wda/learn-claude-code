@@ -331,7 +331,20 @@ class ContextCompactor:
             for block in message["content"]
             if isinstance(block, dict) and block.get("type") == "tool_result"
         ]
-        for block in results[:-self.KEEP_RECENT_RESULTS]:
+        latest_batch = []
+        for message in reversed(messages):
+            content = message.get("content")
+            if message.get("role") != "user" or not isinstance(content, list):
+                continue
+            latest_batch = [
+                block for block in content
+                if isinstance(block, dict) and block.get("type") == "tool_result"
+            ]
+            if latest_batch:
+                break
+        latest_batch_ids = {id(block) for block in latest_batch}
+        older_results = [block for block in results if id(block) not in latest_batch_ids]
+        for block in older_results[:-self.KEEP_RECENT_RESULTS]:
             content = str(block.get("content", ""))
             if len(content) <= 120:
                 continue

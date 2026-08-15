@@ -117,7 +117,7 @@ This step controls the number of messages. Tool results inside the retained mess
 
 ## Step 3: micro_compact
 
-`micro_compact` collects all current `tool_result` blocks. It preserves the latest 3 results and shortens earlier results longer than 120 characters. Persisted results keep their file path; the rest become placeholders:
+`micro_compact` preserves the newest `tool_result` batch in full, then keeps the latest 3 results from earlier batches and shortens older results longer than 120 characters. Persisted results keep their file path; the rest become placeholders:
 
 ![Replacing old results](images/micro-compact.en.svg)
 
@@ -305,7 +305,7 @@ Read the README.md files from s01_agent_loop through s05_todo_write.
 Compare their top-level headings and summarize the naming pattern.
 ```
 
-This task produces at least 5 file results. The latest 3 remain complete, while earlier long results become `[Earlier tool result omitted.]`. A persisted result retains its saved path.
+This task produces at least 5 file results. The newest batch and the latest 3 earlier results remain complete, while older long results become `[Earlier tool result omitted.]`. A persisted result retains its saved path.
 
 ### Experiment 2: Persist a Large Result
 

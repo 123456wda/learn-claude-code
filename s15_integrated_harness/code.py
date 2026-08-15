@@ -1940,9 +1940,20 @@ def snip_compact(messages: list, max_messages: int = 50) -> list:
 
 def micro_compact(messages: list) -> list:
     tool_results = collect_tool_results(messages)
-    if len(tool_results) <= KEEP_RECENT_TOOL_RESULTS:
-        return messages
-    for _, _, block in tool_results[:-KEEP_RECENT_TOOL_RESULTS]:
+    latest_batch = []
+    for message in reversed(messages):
+        content = message.get("content")
+        if message.get("role") != "user" or not isinstance(content, list):
+            continue
+        latest_batch = [
+            block for block in content
+            if isinstance(block, dict) and block.get("type") == "tool_result"
+        ]
+        if latest_batch:
+            break
+    latest_batch_ids = {id(block) for block in latest_batch}
+    older_results = [entry for entry in tool_results if id(entry[2]) not in latest_batch_ids]
+    for _, _, block in older_results[:-KEEP_RECENT_TOOL_RESULTS]:
         if len(str(block.get("content", ""))) > 120:
             block["content"] = "[Earlier tool result compacted. Re-run if needed.]"
     return messages
