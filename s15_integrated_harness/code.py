@@ -2114,9 +2114,17 @@ def start_background_task(block, handlers: dict) -> str:
         except Exception as exc:
             result = f"Error: {type(exc).__name__}: {exc}"
             status = "failed"
-        trigger_hooks("PostToolUse", block, result)
+        try:
+            trigger_hooks("PostToolUse", block, result)
+        except Exception as exc:
+            result = (f"Error: PostToolUse hook failed: "
+                      f"{type(exc).__name__}: {exc}\n{result}")
+            status = "failed"
         with background_lock:
-            background_tasks[bg_id]["status"] = status
+            task = background_tasks.get(bg_id)
+            if task is None:
+                return
+            task["status"] = status
             background_results[bg_id] = str(result)
 
     with background_lock:
@@ -2128,7 +2136,14 @@ def start_background_task(block, handlers: dict) -> str:
             "status": "running",
             "cwd": str(cwd) if cwd else None,
         }
-    threading.Thread(target=worker, daemon=True).start()
+    thread = threading.Thread(target=worker, daemon=True)
+    try:
+        thread.start()
+    except Exception:
+        with background_lock:
+            background_tasks.pop(bg_id, None)
+            background_results.pop(bg_id, None)
+        raise
     print(f"  \033[33m[background] {bg_id}: {str(command)[:60]}\033[0m")
     return bg_id
 
@@ -2989,9 +3004,13 @@ def agent_loop(messages: list, context: dict, active_request: str):
                 continue
 
             if should_run_background(block.name, block.input):
-                bg_id = start_background_task(block, handlers)
-                output = (f"[Background task {bg_id} started] "
-                          "Result will arrive as a task_notification.")
+                try:
+                    bg_id = start_background_task(block, handlers)
+                    output = (f"[Background task {bg_id} started] "
+                              "Result will arrive as a task_notification.")
+                except Exception as exc:
+                    output = (f"Error: Failed to start background task: "
+                              f"{type(exc).__name__}: {exc}")
                 results.append({"type": "tool_result",
                                 "tool_use_id": block.id,
                                 "content": output})
