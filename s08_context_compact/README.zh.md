@@ -117,7 +117,7 @@ messages = [*messages[:head_end], marker, *messages[tail_start:]]
 
 ## 第三步：micro_compact
 
-`micro_compact` 收集当前历史里的全部 `tool_result`。最近 3 条保持完整，更早且超过 120 个字符的结果会缩短。已经转存的结果保留文件路径，其他结果只留下占位符：
+`micro_compact` 会完整保留最新一批 `tool_result`，再保留更早批次中最近 3 条结果；其余超过 120 个字符的旧结果会缩短。已经转存的结果保留文件路径，其他结果只留下占位符：
 
 ![旧结果替换为占位符](images/micro-compact.svg)
 
@@ -305,7 +305,7 @@ python s08_context_compact/code.py
 比较它们的一级标题，并总结这些标题的命名规律。
 ```
 
-任务会产生至少 5 条文件读取结果。最近 3 条保持完整，更早且较长的结果会变成 `[Earlier tool result omitted.]`。已经转存的结果会保留保存路径。
+任务会产生至少 5 条文件读取结果。最新一批以及更早批次中最近 3 条结果保持完整，更早且较长的结果会变成 `[Earlier tool result omitted.]`。已经转存的结果会保留保存路径。
 
 ### 实验二：大结果转存
 
